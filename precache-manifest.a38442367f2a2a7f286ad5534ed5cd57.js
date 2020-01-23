@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "a40215fd7c402d90dbe66d123711e3b6",
+    "revision": "7e89fe32e8e6e193d3adb497bb9def15",
     "url": "/aws-elasticsearch-best-practice-sizing-wizard/index.html"
   },
   {
-    "revision": "22a583f6c71de5e1c085",
+    "revision": "2cf3c3a22405a3d21755",
     "url": "/aws-elasticsearch-best-practice-sizing-wizard/static/css/main.2887712e.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/2.7fd4b9a3.chunk.js.LICENSE"
   },
   {
-    "revision": "22a583f6c71de5e1c085",
-    "url": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/main.c6fe9254.chunk.js"
+    "revision": "2cf3c3a22405a3d21755",
+    "url": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/main.6486c96d.chunk.js"
   },
   {
     "revision": "9565387a74969c528086",
