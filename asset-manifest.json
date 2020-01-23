@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/aws-elasticsearch-best-practice-sizing-wizard/static/css/main.2887712e.chunk.css",
+    "main.js": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/main.c6fe9254.chunk.js",
+    "main.js.map": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/main.c6fe9254.chunk.js.map",
+    "runtime-main.js": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/runtime-main.05052241.js",
+    "runtime-main.js.map": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/runtime-main.05052241.js.map",
+    "static/js/2.7fd4b9a3.chunk.js": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/2.7fd4b9a3.chunk.js",
+    "static/js/2.7fd4b9a3.chunk.js.map": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/2.7fd4b9a3.chunk.js.map",
+    "index.html": "/aws-elasticsearch-best-practice-sizing-wizard/index.html",
+    "precache-manifest.d146d65e7034fe732f7679057bde268d.js": "/aws-elasticsearch-best-practice-sizing-wizard/precache-manifest.d146d65e7034fe732f7679057bde268d.js",
+    "service-worker.js": "/aws-elasticsearch-best-practice-sizing-wizard/service-worker.js",
+    "static/css/main.2887712e.chunk.css.map": "/aws-elasticsearch-best-practice-sizing-wizard/static/css/main.2887712e.chunk.css.map",
+    "static/js/2.7fd4b9a3.chunk.js.LICENSE": "/aws-elasticsearch-best-practice-sizing-wizard/static/js/2.7fd4b9a3.chunk.js.LICENSE",
+    "static/media/logo.svg": "/aws-elasticsearch-best-practice-sizing-wizard/static/media/logo.5d5d9eef.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.05052241.js",
+    "static/js/2.7fd4b9a3.chunk.js",
+    "static/css/main.2887712e.chunk.css",
+    "static/js/main.c6fe9254.chunk.js"
+  ]
+}
