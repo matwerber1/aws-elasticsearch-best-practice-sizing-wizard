@@ -87,7 +87,7 @@ const ElasticsearchWizard = view(() => {
         </Typography>
       </Container>
       <br /><br />
-      <b>Note!</b> - This is a work in process.<br/><br/>
+      <b>Note!</b> - This is a work in process. Also, <b>I am fairly new to Elasticsearch</b> (at the time of this writing), so please fact-check any advice you receive here.<br/><br/>
       <Container maxWidth="md">
         <Typography component="div" style={{ backgroundColor: '#cfe8fc' }} >
           <StorageCalculator/>
