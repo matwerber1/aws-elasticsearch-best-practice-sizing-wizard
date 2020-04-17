@@ -123,8 +123,7 @@ function handleStateChange(event) {
     console.log(`Empty value for ${event.target.name}, replacing with ${stateValuesWhenInputIsEmpty[event.target.name]}`);
     state[event.target.name] = stateValuesWhenInputIsEmpty[event.target.name];
   }
-  // For now, all of our inputs are numerical, so we can scrub non-numerical values:
-  if (isNaN(event.target.value)) {
+  if (isNaN(event.target.value) && event.target.name !== "indexType") {
     console.log(`${event.target.value} is not a valid number for ${event.target.name}, ignoring change!`);
   }
   else {
