@@ -39,7 +39,9 @@ const state = store({
   clusterStorageGb: 0,
   storageGbPerIndex: 0, 
   storageGbPerShard: 30,
-  primaryShardCount: 0
+  primaryShardCount: 0,
+  dataNodeCount: 3,
+  recommendedDataNodeCounts: []
 });
 
 const stateValuesWhenInputIsEmpty = {
@@ -50,9 +52,21 @@ const stateValuesWhenInputIsEmpty = {
   clusterStorageGb: 0,
   storageGbPerIndex: 0, 
   storageGbPerShard: 0,
-  primaryShardCount: 0
+  primaryShardCount: 0,
+  dataNodeCount: 0,
 }
 
+//------------------------------------------------------------------------------
+// updatePrimaryShardCount
+//   Based on all of the user's input data, this function calculates a best
+//   practices / rule of thumb number of primary shards recommended for the
+//   cluster (based on the rule of thumb of between 3 to 50 GB storage per shard).
+//------------------------------------------------------------------------------
+const updatePrimaryShardCount = () => {
+  // We add 0.5 to effectively round up:
+  state.primaryShardCount = ((parseFloat(state.storageGbPerIndex) / parseFloat(state.storageGbPerShard)) + 0.5)
+    .toLocaleString(undefined, { maximumFractionDigits: 0 });
+};
 
 const useStyles = makeStyles(theme => ({
   formControl: {
@@ -70,21 +84,59 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
+//------------------------------------------------------------------------------
+// findPrimeFactors
+//  Finds all prime factors of a given number, i.e. all numbers that divide
+//  without a remainder into a target number. This helps us find the recommended
+//  node count that makes se we evenly distribute our shards across nodes. 
+//  Code was provided by: 
+//  https://js-algorithms.tutorialhorizon.com/2015/09/27/find-all-the-prime-factors-for-the-given-number/
+//------------------------------------------------------------------------------
+
+function findPrimeFactors(n) {
+	if (n < 1)
+		throw "Argument error";
+	var small = [];
+	var large = [];
+	var end = Math.floor(Math.sqrt(n));
+	for (var i = 1; i <= end; i++) {
+		if (n % i == 0) {
+			small.push(i);
+			if (i * i != n)  // Don't include a square root twice
+				large.push(n / i);
+		}
+	}
+	large.reverse();
+	return small.concat(large);
+}
+
+//------------------------------------------------------------------------------
 // Helper function that updates state based on the modified field's key. Note
 // that most input fields work fine and pass in an "event" object with a
 // target.name and target.value, but certain components like the material-ui
 // Slider do not, and we need a slightly different approach (we use a separate
 // function in these cases:
+//------------------------------------------------------------------------------
 function handleStateChange(event) {
 
   if (event.target.value === "") {
     console.log(`Empty value for ${event.target.name}, replacing with ${stateValuesWhenInputIsEmpty[event.target.name]}`);
     state[event.target.name] = stateValuesWhenInputIsEmpty[event.target.name];
   }
+  // For now, all of our inputs are numerical, so we can scrub non-numerical values:
+  if (isNaN(event.target.value)) {
+    console.log(`${event.target.value} is not a valid number for ${event.target.name}, ignoring change!`);
+  }
   else {
     state[event.target.name] = event.target.value;
   }
 }
+
+
+const updateRecommendedDataNodeCounts = () => {
+  state.recommendedDataNodeCounts = findPrimeFactors(state.primaryShardCount).join(", ");
+}
+
 
 //------------------------------------------------------------------------------
 // ElasticSearchWizard
@@ -92,6 +144,9 @@ function handleStateChange(event) {
 //------------------------------------------------------------------------------
 const ElasticsearchWizard = view(() => {
   
+  updatePrimaryShardCount();
+  updateRecommendedDataNodeCounts();
+
   return (
     <React.Fragment>
       <CssBaseline />
@@ -122,6 +177,57 @@ const ElasticsearchWizard = view(() => {
           <ComputeCalculator/>
         </Typography>
       </Container>
+      <br/><br/>
+      <Container maxWidth="md">
+        <Typography component="div" style={{ backgroundColor: '#cfe8fc' }} >
+          <StorageVolumeAdvisor/>
+        </Typography>
+      </Container>
+    </React.Fragment>
+
+  );
+});
+
+
+//------------------------------------------------------------------------------
+// VolumeAdvisor
+//   Gives the user recommendations around choosing EBS and/or instance store
+//   volumes. 
+//------------------------------------------------------------------------------
+const StorageVolumeAdvisor = view(() => {
+
+  return (
+    <React.Fragment>
+      <table className="MyTable">
+        <tbody>
+          <tr><td colSpan="2"><h1>Storage Volume Advisor</h1></td></tr>
+          
+          <tr>
+            <td width="40%">
+              <b>Do you need provisioned IOPS (PIOPS) on an EBS volume?</b>
+            </td>
+            <td>
+              Generally, no. ES is not typically IO-intensive. EBS' general purpose SSD <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html">GP2 volume type</a> gives you 3 IOPS for every 1 GB in storage volume size, up to 3,000 IOPS in total. Often, we find this is enough, and in many cases its more cost-effective to oversize your EBS volume to get extra IOPS than it is to pay for provisioned IOPS.
+              <br />
+              <a href="https://youtu.be/95kQkS51VnU?t=1422">Click here for reference.</a>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b>Should you use EBS volumes or instance-store (locally attached) volumes, such as the <a href="https://aws.amazon.com/ec2/instance-types/i3/"></a>EC2 I3<a/> instance:</b>
+            </td>
+            <td>
+              Rather than network-attached EBS volumes, you could optionally use an EC2 instance that have <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html">NVMe-attached instance storage</a>, which is a high-performance storage volume physically on the same host. I3's can deliver significantly more IOPS (<a href="https://aws.amazon.com/about-aws/whats-new/2017/02/now-available-amazon-ec2-i3-instances-next-generation-storage-optimized-high-i-o-instances/">e.g. up to 3.3M random IOPS at 4KB block size</a>) without any additional storage cost above the price of the EC2 instance itself.
+              <br/><br/>
+              So, should you use an EC2 with instance storeage or an EBS volume? It depends - for smaller use cases (<a href="https://youtu.be/95kQkS51VnU">ballpark, under 5 TB</a>), EC2 with EBS will work and is more cost-effective than instance storage. As your use case grows, there is an inflection point where the I3 storage will be lower-cost.
+              <br /><br />
+              Of course, you may have high performance requirements where, regardless of data size, I3's are needed to meet your throughput requirements and are the better option than EBS.
+              <br/><br />
+              <a href="https://youtu.be/95kQkS51VnU?t=1317">Click here for reference.</a> Note - this reference material refers to I3 vs. R4 and M4 EC2s. Today, we have fifth generation (M5, R5) instances that are higher performance at a lower cost than the old gen-4 instances... so, the breakeven / cost numbers have changed a bit. 
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </React.Fragment>
   );
 });
@@ -138,7 +244,6 @@ const ShardCalculator = view(() => {
       <table className="MyTable">
         <tbody>
           <tr><td colSpan="2"><h1>Shard Count Calculator</h1></td></tr>
-         
           <tr>
             <td>
               <b>Total storage requirement </b>(per above):
@@ -190,7 +295,7 @@ const ShardCalculator = view(() => {
               <b>Recommended number of primary shards</b>: 
             </td>
             <td>
-              <b>{updatePrimaryShardCount()} primary shards</b> (rounded up)
+            <b>{state.primaryShardCount} primary shards</b> (rounded up)
             </td>
           </tr>
           
@@ -262,8 +367,63 @@ const ComputeCalculator = view(() => {
     <React.Fragment>
       <table className="MyTable">
         <tbody>
-          <tr><td colSpan="2"><h1>Compute Calculator</h1></td></tr>
+        <tr><td width="40%" colSpan="2"><h1>Compute Calculator</h1></td></tr>
           <tr>
+            <td colSpan="2">
+              <h2>Master nodes</h2>
+            </td>
+          </tr>
+          <tr>
+            <td colSpan="2">
+              <h2>Data nodes</h2>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Based on your recommended <b>{state.primaryShardCount} primary shards</b> (above), any of the following number of data nodes would give you even shard distribution across your cluster: 
+            </td>
+            <td>
+              {state.recommendedDataNodeCounts}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <b>How many EC2 data nodes do you want?</b>
+              <br /><br/>
+              Fewer nodes are more performant, but we recommend at least two for production to avoid data loss in event of a node failure.
+            </td>
+            <td>
+              <TextField
+                value={state.dataNodeCount}
+                label="Number of data nodes?"
+                name="dataNodeCount"
+                onChange={handleStateChange} 
+                variant="filled"
+              />
+              <br/>
+              {!state.recommendedDataNodeCounts.includes(state.dataNodeCount)
+                ? <p>Warning! {`${state.primaryShardCount} primary shards cannot be evenly distributed across ${state.dataNodeCount} data node(s), which is less than ideal. While it will work, it might lead to hot nodes.`}</p>
+                : ""
+              }
+              {state.dataNodeCount < 2
+              ? <p>{`Warning! At least 2 nodes are recommended for production use cases to avoid data loss in the event of node failure.`}</p>
+                : ""
+              }
+              {
+                state.dataNodeCount > state.primaryShardCount
+                  ? <p>"Warning! having more nodes than primary shards means that you will have underutilized nodes. We recommend having as many or fewer nodes than primary shards." </p>
+                  : ""
+              }
+            </td>
+          </tr>
+          <tr>
+            <td>
+
+            </td>
+            <td>
+              
+            </td>
+          </tr>          <tr>
             <td>
               
             </td>
@@ -486,18 +646,6 @@ function round(n, precision) {
     return parseFloat(n.toLocaleString('en', { maximumSignificantDigits: length + precision, useGrouping: false }));
   }
   return parseFloat(n.toLocaleString('en', { maximumFractionDigits: precision, useGrouping: false }));
-}
-
-//------------------------------------------------------------------------------
-// updatePrimaryShardCount
-//   Based on all of the user's input data, this function calculates a best
-//   practices / rule of thumb number of primary shards recommended for the
-//   cluster (based on the rule of thumb of between 3 to 50 GB storage per shard).
-//------------------------------------------------------------------------------
-const updatePrimaryShardCount = () => {
-  // We add 0.5 to effectively round up:
-  state.primaryShardCount = (parseFloat(state.storageGbPerIndex)/ parseFloat(state.storageGbPerShard)) + 0.5;
-  return state.primaryShardCount.toLocaleString(undefined, {maximumFractionDigits: 0});
 }
 
 //------------------------------------------------------------------------------
