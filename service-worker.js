@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/aws-elasticsearch-best-practice-sizing-wizard/precache-manifest.51f7b80a8e904e3f5dd2694747d91e9d.js"
+  "/aws-elasticsearch-best-practice-sizing-wizard/precache-manifest.bfa28feede6b46ee35b5dd3d0b74a7a1.js"
 );
 
 self.addEventListener('message', (event) => {
