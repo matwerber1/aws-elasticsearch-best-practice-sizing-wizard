@@ -42,6 +42,16 @@ const state = store({
   primaryShardCount: 0
 });
 
+const stateValuesWhenInputIsEmpty = {
+  indexType: WORKLOAD.INDEX_TYPE.SINGLE,
+  indexSize: 0,
+  indexCount: 0.0,
+  replicationFactor: 0, 
+  clusterStorageGb: 0,
+  storageGbPerIndex: 0, 
+  storageGbPerShard: 0,
+  primaryShardCount: 0
+}
 
 
 const useStyles = makeStyles(theme => ({
@@ -66,7 +76,14 @@ const useStyles = makeStyles(theme => ({
 // Slider do not, and we need a slightly different approach (we use a separate
 // function in these cases:
 function handleStateChange(event) {
-  state[event.target.name] = event.target.value;
+
+  if (event.target.value === "") {
+    console.log(`Empty value for ${event.target.name}, replacing with ${stateValuesWhenInputIsEmpty[event.target.name]}`);
+    state[event.target.name] = stateValuesWhenInputIsEmpty[event.target.name];
+  }
+  else {
+    state[event.target.name] = event.target.value;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -370,7 +387,7 @@ const DataSizeTextField = view(() => {
         </td>
         <td>
           <TextField
-            defaultValue={state.indexSize}
+            value={state.indexSize}
             label="data size in GB?"
             name="indexSize"
             onChange={handleStateChange} 
@@ -402,7 +419,7 @@ const IndexCountTextField = view(() => {
           </td>
           <td>
             <TextField
-              defaultValue={state.indexCount}
+              value={state.indexCount}
               label="Number of partitions?"
               name="indexCount"
               onChange={handleStateChange} 
@@ -499,7 +516,7 @@ const ReplicationFactorTextField = view(() => {
         </td>
         <td>
           <TextField
-            defaultValue={state.replicationFactor}
+            value={state.replicationFactor}
             label="replication factor?"
             name="replicationFactor"
             onChange={handleStateChange} 

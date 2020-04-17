@@ -6,7 +6,7 @@ Ultimately, there's no perfect answer for proper ES config and finding the right
 
 ## Link to the Wizard
 
-https://matwerber1.github.io/aws-elasticsearch-best-practice-sizing-wizard/
+http://matwerber1.github.io/aws-elasticsearch-best-practice-sizing-wizard/
 
 ## Disclaimer
 
